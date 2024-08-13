@@ -1,6 +1,6 @@
 module github.com/RofaBR/usdt-monitoring-svc
 
-go 1.21
+go 1.20
 
 
 require (
