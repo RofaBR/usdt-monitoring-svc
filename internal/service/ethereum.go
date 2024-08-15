@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"os"
 
+	"github.com/RofaBR/usdt-monitoring-svc/internal/config"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
@@ -15,13 +16,11 @@ import (
 
 const USDTContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 
-func (s *service) connectToEthereum() *ethclient.Client {
-
-	infuraProjectID := os.Getenv("INFURA_PROJECT_ID")
-
-	client, err := ethclient.Dial("https://mainnet.infura.io/v3/" + infuraProjectID)
+func (s *service) connectToEthereum(cfg config.Config) *ethclient.Client {
+	client, err := ethclient.Dial("https://mainnet.infura.io/v3/" + cfg.InfuraProjectID())
 	if err != nil {
-		log.Fatalf("Failed to connect to the Ethereum client: %v", err)
+		s.log.WithError(err).Error("Failed to connect to the Ethereum client")
+		return nil
 	}
 
 	s.log.Info("Successfully connected to Ethereum")
@@ -44,19 +43,24 @@ func (s *service) loadABI() abi.ABI {
 	return contractABI
 }
 
-func (s *service) getContractAddress() common.Address {
-	return common.HexToAddress(os.Getenv("CONTRACT_ADDRESS"))
+func (s *service) getContractAddress(cfg config.Config) common.Address {
+	return common.HexToAddress(cfg.ContractAddress())
 }
 
-func (s *service) GetTransferEvents(client *ethclient.Client) {
-	contractAddress := s.getContractAddress()
+func (s *service) GetTransferEvents(cfg config.Config) {
+	client := s.connectToEthereum(cfg)
+	if client == nil {
+		return
+	}
+	contractAddress := s.getContractAddress(cfg)
 	query := ethereum.FilterQuery{
 		Addresses: []common.Address{contractAddress},
 	}
 
 	logs, err := client.FilterLogs(context.Background(), query)
 	if err != nil {
-		log.Fatalf("Failed to filter logs: %v", err)
+		s.log.WithError(err).Error("Failed to filter logs")
+		return
 	}
 
 	contractABI := s.loadABI()
@@ -68,8 +72,9 @@ func (s *service) GetTransferEvents(client *ethclient.Client) {
 		}{}
 		err := contractABI.UnpackIntoInterface(&transferEvent, "Transfer", vLog.Data)
 		if err != nil {
-			log.Printf("Failed to unpack log: %v", err)
+			s.log.WithError(err).Error("Failed to unpack log")
+			continue
 		}
-		log.Printf("Transfer event: From: %s, To: %s, Tokens: %s", transferEvent.From.Hex(), transferEvent.To.Hex(), transferEvent.Tokens.String())
+		s.log.Infof("Transfer event: From: %s, To: %s, Tokens: %s", transferEvent.From.Hex(), transferEvent.To.Hex(), transferEvent.Tokens.String())
 	}
 }
