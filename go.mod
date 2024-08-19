@@ -2,13 +2,12 @@ module github.com/RofaBR/usdt-monitoring-svc
 
 go 1.20
 
-
 require (
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/go-chi/chi v4.1.2+incompatible
-	github.com/joho/godotenv v1.5.1
 	github.com/rubenv/sql-migrate v1.7.0
+	github.com/spf13/viper v1.18.2
 	gitlab.com/distributed_lab/ape v1.7.1
 	gitlab.com/distributed_lab/kit v1.11.3
 	gitlab.com/distributed_lab/logan v3.8.1+incompatible
@@ -31,6 +30,7 @@ require (
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1 // indirect
 	github.com/go-stack/stack v1.8.1 // indirect
 	github.com/google/jsonapi v0.0.0-20200226002910-c8283f632fb7 // indirect
+	github.com/google/uuid v1.4.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holiman/uint256 v1.3.1 // indirect
@@ -51,7 +51,6 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.18.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
