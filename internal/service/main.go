@@ -36,7 +36,11 @@ func newService(cfg config.Config) *service {
 }
 
 func Run(cfg config.Config) {
-	if err := newService(cfg).run(); err != nil {
+	svc := newService(cfg)
+
+	go svc.GetTransferEvents(cfg)
+
+	if err := svc.run(); err != nil {
 		panic(err)
 	}
 }

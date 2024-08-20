@@ -13,7 +13,8 @@ import (
 const USDTContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
 
 func (s *service) connectToEthereum(cfg config.Config) *ethclient.Client {
-	client, err := ethclient.Dial("https://mainnet.infura.io/v3/" + cfg.InfuraProjectID())
+	rpcURL := cfg.RPCURL() + cfg.InfuraProjectID()
+	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
 		s.log.WithError(err).Error("Failed to connect to the Ethereum client")
 		return nil

@@ -18,3 +18,4 @@ cop:
 ethereum:
   infura_project_id: "9b22666fc5374205b991fef1b4f0f6d6"
   contract_address: "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+  rpc_url: "https://mainnet.infura.io/v3/"

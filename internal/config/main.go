@@ -19,6 +19,7 @@ type Config interface {
 
 	InfuraProjectID() string
 	ContractAddress() string
+	RPCURL() string
 }
 
 type config struct {
@@ -55,4 +56,8 @@ func (c *config) InfuraProjectID() string {
 
 func (c *config) ContractAddress() string {
 	return c.viper.GetString("ethereum.contract_address")
+}
+
+func (c *config) RPCURL() string {
+	return c.viper.GetString("ethereum.rpc_url")
 }
