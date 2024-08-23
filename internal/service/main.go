@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/RofaBR/usdt-monitoring-svc/internal/config"
+	"github.com/RofaBR/usdt-monitoring-svc/internal/storage"
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
@@ -14,6 +15,7 @@ type service struct {
 	log      *logan.Entry
 	copus    types.Copus
 	listener net.Listener
+	storage  storage.Storage
 }
 
 func (s *service) run() error {
@@ -28,10 +30,14 @@ func (s *service) run() error {
 }
 
 func newService(cfg config.Config) *service {
+
+	db := storage.NewPostgresStorage(cfg.DB().RawDB())
+
 	return &service{
 		log:      cfg.Log(),
 		copus:    cfg.Copus(),
 		listener: cfg.Listener(),
+		storage:  db,
 	}
 }
 

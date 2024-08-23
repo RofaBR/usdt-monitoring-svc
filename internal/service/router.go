@@ -16,8 +16,11 @@ func (s *service) router() chi.Router {
 			handlers.CtxLog(s.log),
 		),
 	)
+
+	handler := handlers.NewHandler(s.storage)
+
 	r.Route("/integrations/usdt-monitoring-svc", func(r chi.Router) {
-		// configure endpoints here
+		r.Get("/transfers", handler.GetTransfers)
 	})
 
 	return r
