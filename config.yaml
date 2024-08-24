@@ -3,7 +3,7 @@ log:
   disable_sentry: true
 
 db:
-  url: db_url
+  url: postgres://$(DB_USERNAME):$(DB_PASSWORD)@localhost:5432/usdt_monitoring_db?sslmode=disable
 
 listener:
   addr: :8000
