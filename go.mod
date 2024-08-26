@@ -6,6 +6,7 @@ require (
 	github.com/alecthomas/kingpin v2.2.6+incompatible
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/go-chi/chi v4.1.2+incompatible
+	github.com/lib/pq v1.10.9
 	github.com/rubenv/sql-migrate v1.7.0
 	github.com/spf13/viper v1.18.2
 	gitlab.com/distributed_lab/ape v1.7.1
@@ -35,10 +36,8 @@ require (
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/jmoiron/sqlx v1.3.5 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
-	github.com/lib/pq v1.10.9 // indirect
 	github.com/magiconair/properties v1.8.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect

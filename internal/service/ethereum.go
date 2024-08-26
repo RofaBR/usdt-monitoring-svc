@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"math/big"
 
 	"github.com/RofaBR/usdt-monitoring-svc/internal/config"
 	usdt "github.com/RofaBR/usdt-monitoring-svc/internal/ethereum"
@@ -10,7 +11,10 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-const USDTContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+const (
+	USDTContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
+	BlockRange          = 1000
+)
 
 func (s *service) connectToEthereum(cfg config.Config) *ethclient.Client {
 	rpcURL := cfg.RPCURL() + cfg.InfuraProjectID()
@@ -41,7 +45,12 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 		return
 	}
 
+	startBlock := big.NewInt(0)
+	endBlock := new(big.Int).Add(startBlock, big.NewInt(BlockRange))
+
 	query := ethereum.FilterQuery{
+		FromBlock: startBlock,
+		ToBlock:   endBlock,
 		Addresses: []common.Address{contractAddress},
 	}
 

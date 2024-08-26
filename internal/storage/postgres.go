@@ -19,7 +19,7 @@ func NewPostgresStorage(db *sql.DB) *PostgresStorage {
 }
 
 func (s *PostgresStorage) SaveTransferEvent(ctx context.Context, event TransferEvent) error {
-	_, err := s.db.ExecContext(ctx, "INSERT INTO transfers (from_address, to_address, amount, tx_hash) VALUES ($1, $2, $3, $4)",
+	_, err := s.db.ExecContext(ctx, "INSERT INTO transfers (from_address, to_address, amount, transaction_hash) VALUES ($1, $2, $3, $4)",
 		event.From, event.To, event.Amount, event.TxHash)
 	if err != nil {
 		log.Printf("Error saving transfer event (From: %s, To: %s, TxHash: %s): %v", event.From, event.To, event.TxHash, err)

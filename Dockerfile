@@ -14,4 +14,4 @@ FROM alpine:3.9
 COPY --from=buildbase /usr/local/bin/usdt-monitoring-svc /usr/local/bin/usdt-monitoring-svc
 RUN apk add --no-cache ca-certificates
 
-ENTRYPOINT ["usdt-monitoring-svc"]
+CMD ["/usr/local/bin/usdt-monitoring-svc"]
