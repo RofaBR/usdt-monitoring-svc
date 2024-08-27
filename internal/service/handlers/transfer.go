@@ -46,9 +46,17 @@ func (h *Handler) GetTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(transfers); err != nil {
+
+	response, err := json.MarshalIndent(transfers, "", "  ")
+	if err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		log.Println("Failed to encode response:", err)
+		return
+	}
+
+	if _, err := w.Write(response); err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		log.Println("Failed to write response:", err)
 		return
 	}
 }
