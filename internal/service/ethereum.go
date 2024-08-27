@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"math/big"
+	"time"
 
 	"github.com/RofaBR/usdt-monitoring-svc/internal/config"
 	usdt "github.com/RofaBR/usdt-monitoring-svc/internal/ethereum"
@@ -13,8 +14,8 @@ import (
 )
 
 const (
-	USDTContractAddress = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
-	BlockRange          = 100
+	transferEventSignature = "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+	BlockRange             = 100
 )
 
 func (s *service) connectToEthereum(cfg config.Config) *ethclient.Client {
@@ -46,6 +47,13 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 		return
 	}
 
+	decimals, err := usdtContract.Decimals(nil)
+	if err != nil {
+		s.log.WithError(err).Error("Failed to get token decimals")
+		return
+	}
+	decimalsFactor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimals)), nil)
+
 	header, err := client.HeaderByNumber(context.Background(), nil)
 	if err != nil {
 		s.log.WithError(err).Error("Failed to get latest block header")
@@ -73,19 +81,31 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 		}
 
 		for _, vLog := range logs {
+
+			if vLog.Topics[0].Hex() != transferEventSignature {
+				s.log.Infof("Skipping non-Transfer event with signature: %s", vLog.Topics[0].Hex())
+				continue
+			}
+
 			transferEvent, err := usdtContract.ParseTransfer(vLog)
 			if err != nil {
 				s.log.WithError(err).Error("Failed to parse log")
 				continue
 			}
 
-			s.log.Infof("Transfer event: From: %s, To: %s, Tokens: %s", transferEvent.From.Hex(), transferEvent.To.Hex(), transferEvent.Value.String())
+			amount := new(big.Rat).SetInt(transferEvent.Value)
+			amount.Quo(amount, new(big.Rat).SetInt(decimalsFactor))
+			formattedAmount := amount.FloatString(int(decimals))
+
+			s.log.Infof("Transfer event: From: %s, To: %s, Amount: %s, Value: %s", transferEvent.From.Hex(), transferEvent.To.Hex(), formattedAmount, transferEvent.Value.String())
 
 			err = s.storage.SaveTransferEvent(context.Background(), storage.TransferEvent{
-				From:   transferEvent.From.Hex(),
-				To:     transferEvent.To.Hex(),
-				Amount: transferEvent.Value.String(),
-				TxHash: vLog.TxHash.Hex(),
+				From:            transferEvent.From.Hex(),
+				To:              transferEvent.To.Hex(),
+				Amount:          formattedAmount,
+				TransactionHash: vLog.TxHash.Hex(),
+				BlockNumber:     vLog.BlockNumber,
+				Timestamp:       time.Now().UTC(),
 			})
 			if err != nil {
 				s.log.WithError(err).Error("Failed to save transfer event")

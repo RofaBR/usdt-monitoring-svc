@@ -2,23 +2,18 @@ package storage
 
 import (
 	"context"
+	"time"
 )
 
 type TransferEvent struct {
-	From   string
-	To     string
-	Amount string
-	TxHash string
+	From            string
+	To              string
+	Amount          string
+	TransactionHash string
+	BlockNumber     uint64
+	Timestamp       time.Time
 }
 
-/*
-	type TransferEventFilter struct {
-		From         *string
-		To           *string
-		Counterparty *string
-		Amount      *string
-	}
-*/
 type FilterCondition struct {
 	Field string
 	Value interface{}
