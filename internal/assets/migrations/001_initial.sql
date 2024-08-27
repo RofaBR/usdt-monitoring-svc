@@ -2,7 +2,7 @@
 
 CREATE TABLE transfers (
     id SERIAL PRIMARY KEY,
-    tx_hash  VARCHAR(66) NOT NULL,
+    transaction_hash  VARCHAR(66) NOT NULL,
     block_number BIGINT NOT NULL,
     from_address VARCHAR(42) NOT NULL,
     to_address VARCHAR(42) NOT NULL,

@@ -1,0 +1,15 @@
+type: object
+properties:
+  conditions:
+    type: array
+    items:
+      type: object
+      properties:
+        field:
+          type: string
+          description: "Field for filtering"
+          example: "from_address"
+        value:
+          type: string
+          description: "The value to filter"
+          example: "0xAbC123..."

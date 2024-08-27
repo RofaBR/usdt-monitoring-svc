@@ -1,0 +1,44 @@
+get:
+  tags:
+    - TransferEvent
+  summary: Get a list of transfers
+  description: Get a list of transfers with the possibility of filtering according to the address of the sender, receiver or counterparty.
+  operationId: getTransfers
+  parameters:
+    - name: from
+      in: query
+      description: Sender's address
+      required: false
+      schema:
+        type: string
+    - name: to
+      in: query
+      description: Recipient's address
+      required: false
+      schema:
+        type: string
+    - name: counterparty
+      in: query
+      description: Counterparty address (sender or recipient)
+      required: false
+      schema:
+        type: string
+    - name: amount
+      in: query
+      description: Transfer amount
+      required: false
+      schema:
+        type: string
+  responses:
+    '200':
+      description: List of transfers
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TransferEvent'
+    '400':
+      description: Invalid request
+    '500':
+      description: Internal server error
