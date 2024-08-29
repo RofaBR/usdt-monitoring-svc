@@ -17,7 +17,6 @@ type Config interface {
 	types.Copuser
 	comfig.Listenerer
 
-	InfuraProjectID() string
 	ContractAddress() string
 	RPCURL() string
 }
@@ -48,10 +47,6 @@ func New(getter kv.Getter) Config {
 		Logger:     comfig.NewLogger(getter, comfig.LoggerOpts{}),
 		viper:      v,
 	}
-}
-
-func (c *config) InfuraProjectID() string {
-	return c.viper.GetString("ethereum.infura_project_id")
 }
 
 func (c *config) ContractAddress() string {

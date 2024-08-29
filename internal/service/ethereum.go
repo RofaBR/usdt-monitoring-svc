@@ -20,7 +20,7 @@ const (
 )
 
 func (s *service) connectToEthereum(cfg config.Config) *ethclient.Client {
-	rpcURL := cfg.RPCURL() + cfg.InfuraProjectID()
+	rpcURL := cfg.RPCURL()
 	client, err := ethclient.Dial(rpcURL)
 	if err != nil {
 		s.log.WithError(err).Error("Failed to connect to the Ethereum client")

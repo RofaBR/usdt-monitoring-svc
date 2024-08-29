@@ -31,20 +31,10 @@ func (s *PostgresStorage) SaveTransferEvent(ctx context.Context, event TransferE
 	return nil
 }
 
-func (s *PostgresStorage) GetTransferEvents(ctx context.Context, filter TransferEventFilter) ([]TransferEvent, error) {
-	query := "SELECT from_address, to_address, amount, transaction_hash FROM transfers WHERE 1=1"
-	args := []interface{}{}
-	argIndex := 1
-
-	for _, condition := range filter.Conditions {
-		query += fmt.Sprintf(" AND %s = $%d", condition.Field, argIndex)
-		args = append(args, condition.Value)
-		argIndex++
-	}
-
-	rows, err := s.db.QueryContext(ctx, query, args...)
+func (s *PostgresStorage) QueryTransfers(ctx context.Context, sql string, args ...interface{}) ([]TransferEvent, error) {
+	rows, err := s.db.QueryContext(ctx, sql, args...)
 	if err != nil {
-		log.Println("Failed to get transfer events:", err)
+		log.Println("Failed to execute query:", err)
 		return nil, err
 	}
 	defer rows.Close()

@@ -25,5 +25,5 @@ type TransferEventFilter struct {
 
 type Storage interface {
 	SaveTransferEvent(ctx context.Context, event TransferEvent) error
-	GetTransferEvents(ctx context.Context, filter TransferEventFilter) ([]TransferEvent, error)
+	QueryTransfers(ctx context.Context, sql string, args ...interface{}) ([]TransferEvent, error)
 }

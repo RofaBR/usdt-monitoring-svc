@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Masterminds/squirrel"
 	"github.com/RofaBR/usdt-monitoring-svc/internal/storage"
 )
 
@@ -25,20 +26,32 @@ func (h *Handler) GetTransfers(w http.ResponseWriter, r *http.Request) {
 		"amount":       "amount",
 	}
 
-	var filter storage.TransferEventFilter
+	queryBuilder := squirrel.Select("from_address", "to_address", "amount", "transaction_hash").
+		From("transfers").
+		PlaceholderFormat(squirrel.Dollar)
+
 	for param, field := range queryParams {
 		value := r.URL.Query().Get(param)
 		if value != "" {
 			if param == "counterparty" {
-				filter.Conditions = append(filter.Conditions, storage.FilterCondition{Field: "from_address", Value: value})
-				filter.Conditions = append(filter.Conditions, storage.FilterCondition{Field: "to_address", Value: value})
+				queryBuilder = queryBuilder.Where(squirrel.Or{
+					squirrel.Eq{"from_address": value},
+					squirrel.Eq{"to_address": value},
+				})
 			} else {
-				filter.Conditions = append(filter.Conditions, storage.FilterCondition{Field: field, Value: value})
+				queryBuilder = queryBuilder.Where(squirrel.Eq{field: value})
 			}
 		}
 	}
 
-	transfers, err := h.Storage.GetTransferEvents(r.Context(), filter)
+	sql, args, err := queryBuilder.ToSql()
+	if err != nil {
+		http.Error(w, "Failed to build query", http.StatusInternalServerError)
+		log.Println("Failed to build query:", err)
+		return
+	}
+
+	transfers, err := h.Storage.QueryTransfers(r.Context(), sql, args...)
 	if err != nil {
 		http.Error(w, "Failed to get transfer events", http.StatusInternalServerError)
 		log.Println("Failed to get transfer events:", err)
