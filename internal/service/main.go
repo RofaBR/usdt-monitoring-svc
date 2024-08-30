@@ -31,7 +31,7 @@ func (s *service) run() error {
 
 func newService(cfg config.Config) *service {
 
-	db := storage.NewPostgresStorage(cfg.DB().RawDB())
+	db := storage.NewPostgresStorage(cfg.DB())
 
 	return &service{
 		log:      cfg.Log(),

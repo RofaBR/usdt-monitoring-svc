@@ -44,14 +44,7 @@ func (h *Handler) GetTransfers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	sql, args, err := queryBuilder.ToSql()
-	if err != nil {
-		http.Error(w, "Failed to build query", http.StatusInternalServerError)
-		log.Println("Failed to build query:", err)
-		return
-	}
-
-	transfers, err := h.Storage.QueryTransfers(r.Context(), sql, args...)
+	transfers, err := h.Storage.QueryTransfers(r.Context(), queryBuilder)
 	if err != nil {
 		http.Error(w, "Failed to get transfer events", http.StatusInternalServerError)
 		log.Println("Failed to get transfer events:", err)
