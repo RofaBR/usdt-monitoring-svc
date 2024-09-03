@@ -24,7 +24,9 @@ func (s *PostgresStorage) DB() *pgdb.DB {
 }
 
 func (s *PostgresStorage) SaveTransferEvent(ctx context.Context, event TransferEvent) error {
+	log.Printf("Amount before formatting: %s", event.Amount)
 	event.Amount = formatAmount(event.Amount, 6)
+	log.Printf("Amount after formatting: %s", event.Amount)
 
 	query := squirrel.Insert("transfers").
 		Columns("from_address", "to_address", "amount", "transaction_hash", "block_number", "timestamp").
@@ -46,6 +48,11 @@ func (s *PostgresStorage) QueryTransfers(ctx context.Context, query squirrel.Sql
 		log.Println("Failed to execute query:", err)
 		return nil, err
 	}
+
+	for _, event := range events {
+		log.Printf("Retrieved event: %+v", event)
+	}
+
 	return events, nil
 }
 

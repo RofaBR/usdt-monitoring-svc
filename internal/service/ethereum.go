@@ -66,6 +66,7 @@ func (s *service) filterLogs(client *ethclient.Client, startBlock, endBlock *big
 		FromBlock: startBlock,
 		ToBlock:   endBlock,
 		Addresses: []common.Address{contractAddress},
+		Topics:    [][]common.Hash{{common.HexToHash(transferEventSignature)}},
 	}
 
 	logs, err := client.FilterLogs(context.Background(), query)
@@ -84,9 +85,9 @@ func (s *service) processLog(vLog types.Log, usdtContract *usdt.Usdt, decimalsFa
 		return
 	}
 
-	amount := new(big.Rat).SetInt(transferEvent.Value)
-	amount.Quo(amount, new(big.Rat).SetInt(decimalsFactor))
-	formattedAmount := amount.FloatString(int(decimalsFactor.BitLen()))
+	amount := new(big.Float).SetInt(transferEvent.Value)
+	amount.Quo(amount, new(big.Float).SetInt(decimalsFactor))
+	formattedAmount := amount.Text('f', 18)
 
 	s.log.Infof("Transfer event: From: %s, To: %s, Amount: %s, Value: %s", transferEvent.From.Hex(), transferEvent.To.Hex(), formattedAmount, transferEvent.Value.String())
 
@@ -121,17 +122,21 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 		return
 	}
 
+	var startBlock *big.Int
+
 	for {
 		currentBlock, err := s.getCurrentBlock(client)
 		if err != nil {
 			return
 		}
 
-		startBlock := new(big.Int).Sub(currentBlock, big.NewInt(BlockRange))
+		if startBlock == nil {
+			startBlock = new(big.Int).Sub(currentBlock, big.NewInt(BlockRange))
+		}
 
 		s.log.Infof("Starting to process blocks from %s to %s", startBlock.String(), currentBlock.String())
 
-		for startBlock.Cmp(currentBlock) < 0 {
+		for startBlock.Cmp(currentBlock) <= 0 {
 			endBlock := s.calculateEndBlock(startBlock, currentBlock)
 
 			s.log.Infof("Processing blocks from %s to %s", startBlock.String(), endBlock.String())
@@ -162,6 +167,8 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 		}
 
 		s.log.Info("Completed processing all blocks. Waiting for new blocks...")
+
+		startBlock = new(big.Int).Add(currentBlock, big.NewInt(1))
 
 		time.Sleep(10 * time.Second)
 	}

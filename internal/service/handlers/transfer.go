@@ -18,30 +18,33 @@ func NewHandler(storage storage.Storage) *Handler {
 }
 
 func (h *Handler) GetTransfers(w http.ResponseWriter, r *http.Request) {
-
-	queryParams := map[string]string{
-		"from":         "from_address",
-		"to":           "to_address",
-		"counterparty": "counterparty",
-		"amount":       "amount",
+	filter, err := NewTransferFilter(r)
+	if err != nil {
+		log.Println("Failed to decode query parameters:", err)
+		http.Error(w, "Invalid query parameters", http.StatusBadRequest)
+		return
 	}
 
-	queryBuilder := squirrel.Select("from_address", "to_address", "amount", "transaction_hash").
+	log.Println("Decoded filter:", filter)
+
+	queryBuilder := squirrel.Select("from_address", "to_address", "amount", "transaction_hash", "block_number", "timestamp").
 		From("transfers").
 		PlaceholderFormat(squirrel.Dollar)
 
-	for param, field := range queryParams {
-		value := r.URL.Query().Get(param)
-		if value != "" {
-			if param == "counterparty" {
-				queryBuilder = queryBuilder.Where(squirrel.Or{
-					squirrel.Eq{"from_address": value},
-					squirrel.Eq{"to_address": value},
-				})
-			} else {
-				queryBuilder = queryBuilder.Where(squirrel.Eq{field: value})
-			}
-		}
+	if filter.From != nil {
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"from_address": *filter.From})
+	}
+	if filter.To != nil {
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"to_address": *filter.To})
+	}
+	if filter.Counterparty != nil {
+		queryBuilder = queryBuilder.Where(squirrel.Or{
+			squirrel.Eq{"from_address": *filter.Counterparty},
+			squirrel.Eq{"to_address": *filter.Counterparty},
+		})
+	}
+	if filter.Amount != nil {
+		queryBuilder = queryBuilder.Where(squirrel.Eq{"amount": *filter.Amount})
 	}
 
 	transfers, err := h.Storage.QueryTransfers(r.Context(), queryBuilder)
