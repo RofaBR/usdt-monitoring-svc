@@ -12,11 +12,12 @@ import (
 )
 
 type PostgresStorage struct {
-	db *pgdb.DB
+	db  *pgdb.DB
+	log *log.Logger
 }
 
-func NewPostgresStorage(db *pgdb.DB) *PostgresStorage {
-	return &PostgresStorage{db: db}
+func NewPostgresStorage(db *pgdb.DB, logger *log.Logger) *PostgresStorage {
+	return &PostgresStorage{db: db, log: logger}
 }
 
 func (s *PostgresStorage) DB() *pgdb.DB {
@@ -64,4 +65,15 @@ func formatAmount(amount string, decimals int) string {
 	}
 	factor := math.Pow(10, float64(decimals))
 	return fmt.Sprintf("%.6f", value/factor)
+}
+
+func (s *PostgresStorage) GetLastProcessedBlock(ctx context.Context) (uint64, error) {
+	var lastBlock uint64
+	query := squirrel.Select("COALESCE(MAX(block_number), 0)").From("transfers")
+	err := s.db.Get(&lastBlock, query)
+	if err != nil {
+		s.log.Printf("Failed to get last block number from the database: %v", err)
+		return 0, err
+	}
+	return lastBlock, nil
 }

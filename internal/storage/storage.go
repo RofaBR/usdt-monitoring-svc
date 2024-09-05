@@ -30,4 +30,5 @@ type Storage interface {
 	DB() *pgdb.DB
 	SaveTransferEvent(ctx context.Context, event TransferEvent) error
 	QueryTransfers(ctx context.Context, query squirrel.Sqlizer) ([]TransferEvent, error)
+	GetLastProcessedBlock(ctx context.Context) (uint64, error)
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"log"
 	"net"
 	"net/http"
 
@@ -31,7 +32,7 @@ func (s *service) run() error {
 
 func newService(cfg config.Config) *service {
 
-	db := storage.NewPostgresStorage(cfg.DB())
+	db := storage.NewPostgresStorage(cfg.DB(), log.Default())
 
 	return &service{
 		log:      cfg.Log(),

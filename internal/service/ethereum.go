@@ -122,16 +122,27 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 		return
 	}
 
+	lastProcessedBlock, err := s.storage.GetLastProcessedBlock(context.Background())
+	if err != nil {
+		s.log.WithError(err).Error("Failed to get last processed block")
+		return
+	}
+
 	var startBlock *big.Int
+	if lastProcessedBlock > 0 {
+		startBlock = big.NewInt(int64(lastProcessedBlock + 1))
+	} else {
+		currentBlock, err := s.getCurrentBlock(client)
+		if err != nil {
+			return
+		}
+		startBlock = new(big.Int).Sub(currentBlock, big.NewInt(BlockRange))
+	}
 
 	for {
 		currentBlock, err := s.getCurrentBlock(client)
 		if err != nil {
 			return
-		}
-
-		if startBlock == nil {
-			startBlock = new(big.Int).Sub(currentBlock, big.NewInt(BlockRange))
 		}
 
 		s.log.Infof("Starting to process blocks from %s to %s", startBlock.String(), currentBlock.String())
@@ -148,9 +159,9 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 			}
 
 			s.log.Infof("Found %d logs in block range [%s, %s]", len(logs), startBlock.String(), endBlock.String())
-
 			for _, vLog := range logs {
 				s.log.Infof("Processing log with signature: %s", vLog.Topics[0].Hex())
+
 				if vLog.Topics[0].Hex() != transferEventSignature {
 					s.log.Infof("Skipping non-Transfer event with signature: %s", vLog.Topics[0].Hex())
 					continue
