@@ -13,6 +13,12 @@ type Handler struct {
 	Storage storage.Storage
 }
 
+type TransferResource struct {
+	Type       string                 `json:"type"`
+	ID         string                 `json:"id"`
+	Attributes map[string]interface{} `json:"attributes"`
+}
+
 func NewHandler(storage storage.Storage) *Handler {
 	return &Handler{Storage: storage}
 }
@@ -54,18 +60,30 @@ func (h *Handler) GetTransfers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-
-	response, err := json.MarshalIndent(transfers, "", "  ")
-	if err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		log.Println("Failed to encode response:", err)
-		return
+	var response []TransferResource
+	for _, transfer := range transfers {
+		resource := TransferResource{
+			Type: "transfers",
+			ID:   transfer.TransactionHash,
+			Attributes: map[string]interface{}{
+				"from":         transfer.From,
+				"to":           transfer.To,
+				"amount":       transfer.Amount,
+				"block_number": transfer.BlockNumber,
+				"timestamp":    transfer.Timestamp,
+			},
+		}
+		response = append(response, resource)
 	}
 
-	if _, err := w.Write(response); err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+	jsonResponse := map[string]interface{}{
+		"data": response,
+	}
+
+	w.Header().Set("Content-Type", "application/vnd.api+json")
+	if err := json.NewEncoder(w).Encode(jsonResponse); err != nil {
 		log.Println("Failed to write response:", err)
+		writeError(w, http.StatusInternalServerError, "Failed to encode response")
 		return
 	}
 }

@@ -8,10 +8,10 @@ import (
 )
 
 type TransferFilter struct {
-	From         *string `filter:"from"`
-	To           *string `filter:"to"`
-	Counterparty *string `filter:"counterparty"`
-	Amount       *string `filter:"amount"`
+	From         *string `filter:"filter[from]"`
+	To           *string `filter:"filter[to]"`
+	Counterparty *string `filter:"filter[counterparty]"`
+	Amount       *string `filter:"filter[amount]"`
 }
 
 func NewTransferFilter(r *http.Request) (TransferFilter, error) {
