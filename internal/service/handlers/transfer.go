@@ -37,19 +37,19 @@ func (h *Handler) GetTransfers(w http.ResponseWriter, r *http.Request) {
 		From("transfers").
 		PlaceholderFormat(squirrel.Dollar)
 
-	if filter.From != nil {
+	if filter.From != nil && *filter.From != "" {
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"from_address": *filter.From})
 	}
-	if filter.To != nil {
+	if filter.To != nil && *filter.To != "" {
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"to_address": *filter.To})
 	}
-	if filter.Counterparty != nil {
+	if filter.Counterparty != nil && *filter.Counterparty != "" {
 		queryBuilder = queryBuilder.Where(squirrel.Or{
 			squirrel.Eq{"from_address": *filter.Counterparty},
 			squirrel.Eq{"to_address": *filter.Counterparty},
 		})
 	}
-	if filter.Amount != nil {
+	if filter.Amount != nil && *filter.Amount != "" {
 		queryBuilder = queryBuilder.Where(squirrel.Eq{"amount": *filter.Amount})
 	}
 

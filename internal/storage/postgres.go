@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
-	"strconv"
 
 	"github.com/Masterminds/squirrel"
 	"gitlab.com/distributed_lab/kit/pgdb"
@@ -25,10 +23,6 @@ func (s *PostgresStorage) DB() *pgdb.DB {
 }
 
 func (s *PostgresStorage) SaveTransferEvent(ctx context.Context, event TransferEvent) error {
-	log.Printf("Amount before formatting: %s", event.Amount)
-	event.Amount = formatAmount(event.Amount, 6)
-	log.Printf("Amount after formatting: %s", event.Amount)
-
 	query := squirrel.Insert("transfers").
 		Columns("from_address", "to_address", "amount", "transaction_hash", "block_number", "timestamp").
 		Values(event.From, event.To, event.Amount, event.TransactionHash, event.BlockNumber, event.Timestamp)
@@ -55,16 +49,6 @@ func (s *PostgresStorage) QueryTransfers(ctx context.Context, query squirrel.Sql
 	}
 
 	return events, nil
-}
-
-func formatAmount(amount string, decimals int) string {
-	value, err := strconv.ParseFloat(amount, 64)
-	if err != nil {
-		log.Println("Failed to parse amount:", err)
-		return amount
-	}
-	factor := math.Pow(10, float64(decimals))
-	return fmt.Sprintf("%.6f", value/factor)
 }
 
 func (s *PostgresStorage) GetLastProcessedBlock(ctx context.Context) (uint64, error) {

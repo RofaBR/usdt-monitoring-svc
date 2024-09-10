@@ -87,7 +87,7 @@ func (s *service) processLog(vLog types.Log, usdtContract *usdt.Usdt, decimalsFa
 
 	amount := new(big.Float).SetInt(transferEvent.Value)
 	amount.Quo(amount, new(big.Float).SetInt(decimalsFactor))
-	formattedAmount := amount.Text('f', 18)
+	formattedAmount := amount.Text('f', 6)
 
 	s.log.Infof("Transfer event: From: %s, To: %s, Amount: %s, Value: %s", transferEvent.From.Hex(), transferEvent.To.Hex(), formattedAmount, transferEvent.Value.String())
 
