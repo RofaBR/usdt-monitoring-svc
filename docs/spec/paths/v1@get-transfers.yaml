@@ -40,5 +40,7 @@ get:
               $ref: '#/components/schemas/TransferEvent'
     '400':
       description: Invalid request
+    '401':
+      description: not allowed
     '500':
       description: Internal server error

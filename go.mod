@@ -8,8 +8,8 @@ require (
 	github.com/ethereum/go-ethereum v1.11.5
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/rubenv/sql-migrate v1.7.0
-	github.com/spf13/viper v1.18.2
 	gitlab.com/distributed_lab/ape v1.7.1
+	gitlab.com/distributed_lab/figure/v3 v3.1.4
 	gitlab.com/distributed_lab/kit v1.11.3
 	gitlab.com/distributed_lab/logan v3.8.1+incompatible
 	gitlab.com/distributed_lab/urlval v3.0.0+incompatible
@@ -54,11 +54,11 @@ require (
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/viper v1.18.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	gitlab.com/distributed_lab/figure v2.1.2+incompatible // indirect
-	gitlab.com/distributed_lab/figure/v3 v3.1.4 // indirect
 	gitlab.com/distributed_lab/lorem v0.2.0 // indirect
 	gitlab.com/distributed_lab/running v1.6.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect

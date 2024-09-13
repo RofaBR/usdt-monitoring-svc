@@ -8,7 +8,7 @@ import (
 	"github.com/RofaBR/usdt-monitoring-svc/internal/config"
 	usdt "github.com/RofaBR/usdt-monitoring-svc/internal/ethereum"
 	"github.com/RofaBR/usdt-monitoring-svc/internal/storage"
-	"github.com/ethereum/go-ethereum"
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -61,18 +61,36 @@ func (s *service) calculateEndBlock(startBlock, currentBlock *big.Int) *big.Int 
 	return endBlock
 }
 
-func (s *service) filterLogs(client *ethclient.Client, startBlock, endBlock *big.Int, contractAddress common.Address) []types.Log {
-	query := ethereum.FilterQuery{
-		FromBlock: startBlock,
-		ToBlock:   endBlock,
-		Addresses: []common.Address{contractAddress},
-		Topics:    [][]common.Hash{{common.HexToHash(transferEventSignature)}},
+func (s *service) filterLogs(startBlock, endBlock *big.Int, usdtContract *usdt.UsdtFilterer) []types.Log {
+	opts := &bind.FilterOpts{
+		Start: startBlock.Uint64(),
+		End: func() *uint64 {
+			if endBlock != nil {
+				end := endBlock.Uint64()
+				return &end
+			}
+			return nil
+		}(),
+		Context: context.Background(),
 	}
 
-	logs, err := client.FilterLogs(context.Background(), query)
+	from := []common.Address{}
+	to := []common.Address{}
+
+	iter, err := usdtContract.FilterTransfer(opts, from, to)
 	if err != nil {
-		s.log.WithError(err).Errorf("Failed to filter logs for block range [%s, %s]", startBlock.String(), endBlock.String())
+		s.log.WithError(err).Errorf("Failed to filter transfer logs for block range [%s, %s]", startBlock.String(), endBlock.String())
 		return nil
+	}
+	defer iter.Close()
+
+	var logs []types.Log
+	for iter.Next() {
+		logs = append(logs, iter.Event.Raw)
+	}
+
+	if iter.Error() != nil {
+		s.log.WithError(iter.Error()).Errorf("Error occurred during transfer log iteration for block range [%s, %s]", startBlock.String(), endBlock.String())
 	}
 
 	return logs
@@ -111,32 +129,28 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 	}
 
 	contractAddress := s.getContractAddress(cfg)
-	usdtContract, err := usdt.NewUsdt(contractAddress, client)
+
+	usdtContractFilterer, err := usdt.NewUsdtFilterer(contractAddress, client)
 	if err != nil {
-		s.log.WithError(err).Error("Failed to instantiate a Token contract")
+		s.log.WithError(err).Error("Failed to instantiate Token contract for filtering")
 		return
 	}
 
-	decimalsFactor := s.getDecimalsFactor(usdtContract)
+	usdtContractForProcessing, err := usdt.NewUsdt(contractAddress, client)
+	if err != nil {
+		s.log.WithError(err).Error("Failed to instantiate Token contract for processing")
+		return
+	}
+
+	decimalsFactor := s.getDecimalsFactor(usdtContractForProcessing)
 	if decimalsFactor == nil {
 		return
 	}
 
-	lastProcessedBlock, err := s.storage.GetLastProcessedBlock(context.Background())
+	startBlock, err := s.determineStartBlock(client)
 	if err != nil {
-		s.log.WithError(err).Error("Failed to get last processed block")
+		s.log.WithError(err).Error("Failed to determine start block")
 		return
-	}
-
-	var startBlock *big.Int
-	if lastProcessedBlock > 0 {
-		startBlock = big.NewInt(int64(lastProcessedBlock + 1))
-	} else {
-		currentBlock, err := s.getCurrentBlock(client)
-		if err != nil {
-			return
-		}
-		startBlock = new(big.Int).Sub(currentBlock, big.NewInt(BlockRange))
 	}
 
 	for {
@@ -152,35 +166,45 @@ func (s *service) GetTransferEvents(cfg config.Config) {
 
 			s.log.Infof("Processing blocks from %s to %s", startBlock.String(), endBlock.String())
 
-			logs := s.filterLogs(client, startBlock, endBlock, contractAddress)
+			logs := s.filterLogs(startBlock, endBlock, usdtContractFilterer)
 			if logs == nil {
 				s.log.Warn("No logs found or error occurred while filtering logs")
 				break
 			}
 
-			s.log.Infof("Found %d logs in block range [%s, %s]", len(logs), startBlock.String(), endBlock.String())
 			for _, vLog := range logs {
-				s.log.Infof("Processing log with signature: %s", vLog.Topics[0].Hex())
-
 				if vLog.Topics[0].Hex() != transferEventSignature {
 					s.log.Infof("Skipping non-Transfer event with signature: %s", vLog.Topics[0].Hex())
 					continue
 				}
-
-				s.processLog(vLog, usdtContract, decimalsFactor)
+				s.processLog(vLog, usdtContractForProcessing, decimalsFactor)
 			}
 
-			s.log.Infof("Finished processing block range [%s, %s]", startBlock.String(), endBlock.String())
-
 			startBlock = new(big.Int).Add(endBlock, big.NewInt(1))
-
 			time.Sleep(1 * time.Second)
 		}
 
 		s.log.Info("Completed processing all blocks. Waiting for new blocks...")
 
 		startBlock = new(big.Int).Add(currentBlock, big.NewInt(1))
-
 		time.Sleep(10 * time.Second)
 	}
+}
+
+func (s *service) determineStartBlock(client *ethclient.Client) (*big.Int, error) {
+	lastProcessedBlock, err := s.storage.GetLastProcessedBlock(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	if lastProcessedBlock > 0 {
+		return big.NewInt(int64(lastProcessedBlock + 1)), nil
+	}
+
+	currentBlock, err := s.getCurrentBlock(client)
+	if err != nil {
+		return nil, err
+	}
+
+	return new(big.Int).Sub(currentBlock, big.NewInt(BlockRange)), nil
 }

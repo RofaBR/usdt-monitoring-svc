@@ -1,32 +1,48 @@
 type: object
 required:
-  - from
-  - to
-  - amount
-  - transactionHash
+  - id
+  - type
+  - attributes
 properties:
-  from:
+  id:
     type: string
-    description: "Sender's address"
-    example: "0xA57799Bc56bFcDaCBf492F269DAb5c019781cabA"
-  to:
+    description: "Unique identifier"
+    example: "0x1"
+  type:
     type: string
-    description: "Recipient's address"
-    example: "0x1c6e01d941f749BD4EFa3BaD9f86A22E1ac2c43A"
-  amount:
-    type: string
-    description: "Number of tokens"
-    example: "1000.000000"
-  transactionHash:
-    type: string
-    description: "Transaction hash"
-    example: "0xf9060a75db33a7a3ddf5f20b0fa6fbc9c333272e6a061dfcedc4470447a7fccd"
-  blockNumber:
-    type: integer
-    description: "Block number"
-    example: 1234567
-  timestamp:
-    type: string
-    format: date-time
-    description: "Transaction creation time"
-    example: "2023-08-15T12:34:56Z"
+    description: "Type of resource"
+    example: "transfer-event"
+  attributes:
+    type: object
+    required:
+      - from
+      - to
+      - amount
+      - transactionHash
+    properties:
+      from:
+        type: string
+        description: "Sender's address"
+        example: "0xA57799Bc56bFcDaCBf492F269DAb5c019781cabA"
+      to:
+        type: string
+        description: "Recipient's address"
+        example: "0x1c6e01d941f749BD4EFa3BaD9f86A22E1ac2c43A"
+      amount:
+        type: string
+        description: "Number of tokens"
+        example: "1000.000000"
+      transactionHash:
+        type: string
+        description: "Transaction hash"
+        example: "0xf9060a75db33a7a3ddf5f20b0fa6fbc9c333272e6a061dfcedc4470447a7fccd"
+      blockNumber:
+        type: integer
+        format: int64
+        description: "Block number"
+        example: 1234567
+      timestamp:
+        type: string
+        format: date-time
+        description: "Transaction creation time"
+        example: "2023-08-15T12:34:56Z"
